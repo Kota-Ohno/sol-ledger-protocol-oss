@@ -7,12 +7,13 @@ privacy policy do not belong in the shared schema.
 Before opening a pull request:
 
 ```bash
-npm ci --ignore-scripts
-npm test
+corepack enable
+pnpm install --frozen-lockfile --ignore-scripts
+pnpm test
 cargo fmt --check
 cargo clippy --workspace --all-targets -- -D warnings
 cargo test --workspace
-npm run audit:secrets
+pnpm audit:secrets
 ```
 
 Schema changes require matching valid and invalid fixtures plus regenerated and

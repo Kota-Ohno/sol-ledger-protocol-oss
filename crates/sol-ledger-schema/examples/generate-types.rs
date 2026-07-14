@@ -56,7 +56,7 @@ fn main() -> Result<()> {
     type_space.add_ref_types(schemas)?;
     let generated = type_space.to_stream();
     let output = quote! {
-        // Generated from schemas/*.schema.json by npm run generate. Do not edit.
+        // Generated from schemas/*.schema.json by pnpm generate. Do not edit.
         #generated
     }
     .to_string();

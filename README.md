@@ -12,16 +12,17 @@ The protocol has no hosted service or paid runtime dependency. Verify both
 language implementations locally:
 
 ```bash
-npm ci --ignore-scripts
-npm test
+corepack enable
+pnpm install --frozen-lockfile --ignore-scripts
+pnpm test
 cargo test --workspace
 ```
 
 ## Development
 
 ```bash
-npm install
-npm test
+pnpm install
+pnpm test
 cargo test --workspace
 cargo run -p sol-ledger-cli -- verify-chain trace.jsonl --expected-head-sha256 <trusted-sha256>
 ```
@@ -42,8 +43,8 @@ contract. TypeScript and Rust projections are committed so consumers do not
 need generators at install time.
 
 ```sh
-npm run generate
-npm run check:generated
+pnpm generate
+pnpm check:generated
 ```
 
 Generation uses exact, lockfile-pinned `json-schema-to-typescript` 15.0.4 and
@@ -52,12 +53,12 @@ generator resolves the event envelope's security
 policy reference from the local checkout and never fetches schemas over the
 network. Conditional, format, pattern, and bound constraints that cannot be
 represented soundly in language types remain enforced by the existing AJV and
-Rust runtime validators. `npm test` regenerates both languages and fails on a
+Rust runtime validators. `pnpm test` regenerates both languages and fails on a
 checked-in generated-file diff.
 
 ## Security and license
 
-Run `npm run audit:secrets` with Gitleaks installed before preparing a release.
+Run `pnpm audit:secrets` with Gitleaks installed before preparing a release.
 See [SECURITY.md](SECURITY.md) for private vulnerability reporting. Sol Ledger
 Protocol is available under the MIT License; see [LICENSE](LICENSE).
 
