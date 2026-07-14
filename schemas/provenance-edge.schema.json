@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://sol-ledger.dev/schema/provenance-edge/0.1.0",
+  "title": "Sol Ledger provenance edge",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["edgeId", "relationship", "fromRef", "toRef", "recordedAt"],
+  "properties": {
+    "edgeId": { "type": "string", "pattern": "^edge_[A-Za-z0-9_-]{8,}$" },
+    "relationship": { "enum": ["generated_by", "used", "derived_from", "attributed_to", "acted_on_behalf_of", "invalidated_by"] },
+    "fromRef": { "type": "string", "minLength": 1 },
+    "toRef": { "type": "string", "minLength": 1 },
+    "recordedAt": { "type": "string", "format": "date-time" },
+    "attributes": { "type": "object" }
+  }
+}

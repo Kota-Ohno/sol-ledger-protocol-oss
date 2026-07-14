@@ -1,0 +1,20 @@
+[package]
+name = "sol-ledger-schema"
+version.workspace = true
+edition.workspace = true
+license-file.workspace = true
+readme.workspace = true
+repository.workspace = true
+homepage.workspace = true
+description = "Schema validation and generated Rust types for Sol Ledger protocol records"
+
+[dependencies]
+anyhow.workspace = true
+jsonschema.workspace = true
+serde_json.workspace = true
+serde.workspace = true
+
+[dev-dependencies]
+quote = "1.0.40"
+schemars = "0.8.22"
+typify = { version = "=0.7.0", default-features = false }

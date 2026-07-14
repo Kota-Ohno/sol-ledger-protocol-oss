@@ -1,0 +1,15 @@
+{
+  "schemaVersion": "0.1.0",
+  "eventId": "evt_01JABCDE1234",
+  "eventType": "artifact.observed",
+  "occurredAt": "2026-07-11T12:00:00Z",
+  "recordedAt": "2026-07-11T12:00:01Z",
+  "runId": "run_01JABCDE1234",
+  "traceId": "4bf92f3577b34da6a3ce929d0e0e4736",
+  "spanId": "00f067aa0ba902b7",
+  "actor": { "kind": "agent", "id": "agent_sol", "software": "codex" },
+  "subjectRefs": ["artifact:sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"],
+  "payload": { "status": "observed" },
+  "security": { "sensitivity": "private", "contentMode": "hash_only", "retentionClass": "user_managed" },
+  "integrity": { "payloadSha256": "bd5fe8e64f61c5e4029b4fbc87217455ecae67226d1156ac612f65ebae2307a0", "previousEventSha256": null }
+}

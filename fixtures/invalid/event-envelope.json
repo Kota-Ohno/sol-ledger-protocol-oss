@@ -1,0 +1,1 @@
+{"schemaVersion":"0.1.0","eventId":"bad","eventType":"Observed","occurredAt":"not-a-date","recordedAt":"2026-07-11T12:00:00Z","actor":{"kind":"agent","id":"sol"},"payload":{},"security":{"sensitivity":"private","contentMode":"hash_only","retentionClass":"audit"},"integrity":{"payloadSha256":"bad"}}

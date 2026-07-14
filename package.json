@@ -1,0 +1,24 @@
+{
+  "name": "sol-ledger-protocol",
+  "version": "0.1.0",
+  "private": true,
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "audit:secrets": "node scripts/audit-secrets.mjs",
+    "generate": "node scripts/generate-types.mjs",
+    "check:generated": "node scripts/generate-types.mjs --check",
+    "test": "npm run check:generated && npm run typecheck && npm run test:interop && cargo test -p sol-ledger-schema --example generate-types && node --test scripts/audit-secrets.test.mjs scripts/fixtures.test.mjs scripts/generated-types.test.mjs",
+    "test:interop": "node -e \"require('node:fs').rmSync('.tmp/interop',{recursive:true,force:true})\" && tsc --noEmit false --outDir .tmp/interop && node --test scripts/interop.test.mjs",
+    "typecheck": "tsc --noEmit",
+    "validate:fixtures": "node scripts/validate-fixtures.mjs"
+  },
+  "dependencies": {
+    "ajv": "^8.17.1",
+    "ajv-formats": "^3.0.1"
+  },
+  "devDependencies": {
+    "json-schema-to-typescript": "15.0.4",
+    "typescript": "^5.9.3"
+  }
+}

@@ -1,0 +1,13 @@
+# Security policy
+
+Please report suspected vulnerabilities through this repository's private
+GitHub Security Advisory flow. Do not open a public issue for an undisclosed
+vulnerability.
+
+Use synthetic inputs and omit real prompts, tool output, credentials, private
+trace data, local paths, and signing keys. Include the affected revision, the
+smallest reproducible case, and the security property that appears to fail.
+
+Only the latest release and current `main` branch receive security fixes. No
+response-time guarantee is offered, but reports will be assessed on a
+best-effort basis before public disclosure is coordinated.
