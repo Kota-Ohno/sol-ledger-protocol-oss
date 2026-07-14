@@ -2,6 +2,7 @@ use anyhow::{Context, Result, bail};
 use jsonschema::Resource;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
+use std::{collections::HashMap, sync::LazyLock};
 
 /// Schema-derived types. The existing root-level API remains available for
 /// compatibility while consumers migrate to these generated definitions.
@@ -64,7 +65,7 @@ pub struct Actor {
     pub software: Option<String>,
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct EventIntegrity {
     pub payload_sha256: String,
@@ -72,6 +73,12 @@ pub struct EventIntegrity {
     pub previous_event_sha256: Option<String>,
 }
 
+/// Compatibility facade for the original root-level API.
+///
+/// New code should prefer [`generated::EventEnvelope`], whose object payload
+/// and collection fields encode more of the JSON Schema contract in Rust's
+/// type system. The nested root types intentionally preserve the original
+/// permissive serde surface; explicit conversions bridge them to strict types.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct EventEnvelope {
@@ -94,27 +101,198 @@ pub struct EventEnvelope {
     pub integrity: EventIntegrity,
 }
 
-pub fn validate(schema_name: &str, instance: &Value) -> Result<()> {
-    let source = match schema_name {
-        "event-envelope" => include_str!("../../../schemas/event-envelope.schema.json"),
-        "security-policy" => include_str!("../../../schemas/security-policy.schema.json"),
-        "artifact-ref" => include_str!("../../../schemas/artifact-ref.schema.json"),
-        "provenance-edge" => include_str!("../../../schemas/provenance-edge.schema.json"),
-        _ => bail!("unknown schema: {schema_name}"),
+impl TryFrom<EventEnvelope> for generated::EventEnvelope {
+    type Error = generated::error::ConversionError;
+
+    fn try_from(event: EventEnvelope) -> std::result::Result<Self, Self::Error> {
+        let Value::Object(payload) = event.payload else {
+            return Err("event payload must be a JSON object".into());
+        };
+        Ok(Self {
+            actor: event.actor.into(),
+            event_id: event.event_id,
+            event_type: event.event_type,
+            integrity: event.integrity.into(),
+            occurred_at: event.occurred_at,
+            payload,
+            recorded_at: event.recorded_at,
+            run_id: event.run_id,
+            schema_version: Value::String(event.schema_version),
+            security: event.security.into(),
+            span_id: event.span_id,
+            subject_refs: event.subject_refs.unwrap_or_default(),
+            trace_id: event.trace_id,
+        })
+    }
+}
+
+impl TryFrom<generated::EventEnvelope> for EventEnvelope {
+    type Error = generated::error::ConversionError;
+
+    fn try_from(event: generated::EventEnvelope) -> std::result::Result<Self, Self::Error> {
+        let Value::String(schema_version) = event.schema_version else {
+            return Err("event schemaVersion must be a string".into());
+        };
+        Ok(Self {
+            schema_version,
+            event_id: event.event_id,
+            event_type: event.event_type,
+            occurred_at: event.occurred_at,
+            recorded_at: event.recorded_at,
+            run_id: event.run_id,
+            trace_id: event.trace_id,
+            span_id: event.span_id,
+            actor: event.actor.into(),
+            subject_refs: (!event.subject_refs.is_empty()).then_some(event.subject_refs),
+            payload: Value::Object(event.payload),
+            security: event.security.into(),
+            integrity: event.integrity.into(),
+        })
+    }
+}
+
+macro_rules! enum_bridge {
+    ($compat:ty, $generated:ty, [$($variant:ident),+ $(,)?]) => {
+        impl From<$compat> for $generated {
+            fn from(value: $compat) -> Self {
+                match value { $(<$compat>::$variant => Self::$variant),+ }
+            }
+        }
+        impl From<$generated> for $compat {
+            fn from(value: $generated) -> Self {
+                match value { $(<$generated>::$variant => Self::$variant),+ }
+            }
+        }
     };
-    let schema: Value = serde_json::from_str(source).context("parse embedded schema")?;
-    let security_schema: Value =
-        serde_json::from_str(include_str!("../../../schemas/security-policy.schema.json"))
-            .context("parse security schema")?;
-    let validator = jsonschema::options()
-        .with_draft(jsonschema::Draft::Draft202012)
-        .should_validate_formats(true)
-        .with_resource(
-            "https://sol-ledger.dev/schema/security-policy/0.1.0",
-            Resource::from_contents(security_schema).context("register security schema")?,
-        )
-        .build(&schema)
-        .context("compile schema")?;
+}
+
+enum_bridge!(
+    ActorKind,
+    generated::EventEnvelopeActorKind,
+    [Human, Agent, Service, System]
+);
+enum_bridge!(
+    Sensitivity,
+    generated::SecurityPolicySensitivity,
+    [Public, Internal, Private, SecretNeverExport]
+);
+enum_bridge!(
+    ContentMode,
+    generated::SecurityPolicyContentMode,
+    [MetadataOnly, HashOnly, Redacted, FullOptIn]
+);
+enum_bridge!(
+    RetentionClass,
+    generated::SecurityPolicyRetentionClass,
+    [Ephemeral, UserManaged, Audit, LegalHold]
+);
+
+impl From<Actor> for generated::EventEnvelopeActor {
+    fn from(value: Actor) -> Self {
+        Self {
+            id: value.id,
+            kind: value.kind.into(),
+            software: value.software,
+        }
+    }
+}
+
+impl From<generated::EventEnvelopeActor> for Actor {
+    fn from(value: generated::EventEnvelopeActor) -> Self {
+        Self {
+            kind: value.kind.into(),
+            id: value.id,
+            software: value.software,
+        }
+    }
+}
+
+impl From<EventIntegrity> for generated::EventEnvelopeIntegrity {
+    fn from(value: EventIntegrity) -> Self {
+        Self {
+            payload_sha256: value.payload_sha256,
+            previous_event_sha256: value.previous_event_sha256,
+        }
+    }
+}
+
+impl From<generated::EventEnvelopeIntegrity> for EventIntegrity {
+    fn from(value: generated::EventEnvelopeIntegrity) -> Self {
+        Self {
+            payload_sha256: value.payload_sha256,
+            previous_event_sha256: value.previous_event_sha256,
+        }
+    }
+}
+
+impl From<SecurityPolicy> for generated::SecurityPolicy {
+    fn from(value: SecurityPolicy) -> Self {
+        Self {
+            content_mode: value.content_mode.into(),
+            expires_at: value.expires_at,
+            redaction_profile: value.redaction_profile,
+            retention_class: value.retention_class.into(),
+            sensitivity: value.sensitivity.into(),
+        }
+    }
+}
+
+impl From<generated::SecurityPolicy> for SecurityPolicy {
+    fn from(value: generated::SecurityPolicy) -> Self {
+        Self {
+            sensitivity: value.sensitivity.into(),
+            content_mode: value.content_mode.into(),
+            retention_class: value.retention_class.into(),
+            expires_at: value.expires_at,
+            redaction_profile: value.redaction_profile,
+        }
+    }
+}
+static VALIDATORS: LazyLock<HashMap<&'static str, jsonschema::Validator>> = LazyLock::new(|| {
+    [
+        (
+            "event-envelope",
+            include_str!("../../../schemas/event-envelope.schema.json"),
+        ),
+        (
+            "security-policy",
+            include_str!("../../../schemas/security-policy.schema.json"),
+        ),
+        (
+            "artifact-ref",
+            include_str!("../../../schemas/artifact-ref.schema.json"),
+        ),
+        (
+            "provenance-edge",
+            include_str!("../../../schemas/provenance-edge.schema.json"),
+        ),
+    ]
+    .into_iter()
+    .map(|(name, source)| {
+        let schema: Value =
+            serde_json::from_str(source).expect("embedded schema must be valid JSON");
+        let security_schema: Value =
+            serde_json::from_str(include_str!("../../../schemas/security-policy.schema.json"))
+                .expect("embedded security schema must be valid JSON");
+        let validator = jsonschema::options()
+            .with_draft(jsonschema::Draft::Draft202012)
+            .should_validate_formats(true)
+            .with_resource(
+                "https://sol-ledger.dev/schema/security-policy/0.1.0",
+                Resource::from_contents(security_schema)
+                    .expect("embedded security schema must register"),
+            )
+            .build(&schema)
+            .expect("embedded schema must compile");
+        (name, validator)
+    })
+    .collect()
+});
+
+pub fn validate(schema_name: &str, instance: &Value) -> Result<()> {
+    let validator = VALIDATORS
+        .get(schema_name)
+        .with_context(|| format!("unknown schema: {schema_name}"))?;
     let errors: Vec<String> = validator
         .iter_errors(instance)
         .map(|error| error.to_string())
@@ -212,7 +390,47 @@ mod tests {
                 previous_event_sha256: None,
             },
         };
+        let generated = generated::EventEnvelope::try_from(event.clone()).unwrap();
+        assert_eq!(EventEnvelope::try_from(generated).unwrap(), event);
         validate("event-envelope", &serde_json::to_value(event).unwrap()).unwrap();
+    }
+
+    #[test]
+    fn compatibility_event_rejects_non_object_payload_when_converted() {
+        let value: Value =
+            serde_json::from_str(include_str!("../../../fixtures/valid/event-envelope.json"))
+                .unwrap();
+        let mut event: EventEnvelope = serde_json::from_value(value).unwrap();
+        event.payload = Value::String("not an object".into());
+
+        assert!(generated::EventEnvelope::try_from(event).is_err());
+    }
+
+    #[test]
+    fn root_facade_preserves_permissive_nested_deserialization() {
+        let mut value: Value =
+            serde_json::from_str(include_str!("../../../fixtures/valid/event-envelope.json"))
+                .unwrap();
+        value["actor"]["futureField"] = Value::Bool(true);
+
+        assert!(serde_json::from_value::<EventEnvelope>(value.clone()).is_ok());
+        assert!(serde_json::from_value::<generated::EventEnvelope>(value).is_err());
+    }
+
+    #[test]
+    fn generated_bridge_normalizes_empty_subject_refs_to_omission() {
+        let value: Value =
+            serde_json::from_str(include_str!("../../../fixtures/valid/event-envelope.json"))
+                .unwrap();
+        let mut event: EventEnvelope = serde_json::from_value(value).unwrap();
+        event.subject_refs = Some(Vec::new());
+
+        let generated = generated::EventEnvelope::try_from(event).unwrap();
+        assert!(generated.subject_refs.is_empty());
+        assert_eq!(
+            EventEnvelope::try_from(generated).unwrap().subject_refs,
+            None
+        );
     }
 
     #[test]

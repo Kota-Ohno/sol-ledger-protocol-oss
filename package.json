@@ -9,7 +9,7 @@
     "audit:secrets": "node scripts/audit-secrets.mjs",
     "generate": "node scripts/generate-types.mjs",
     "check:generated": "node scripts/generate-types.mjs --check",
-    "test": "pnpm check:generated && pnpm typecheck && pnpm test:interop && cargo test -p sol-ledger-schema --example generate-types && node --test scripts/audit-secrets.test.mjs scripts/fixtures.test.mjs scripts/generated-types.test.mjs",
+    "test": "pnpm check:generated && pnpm typecheck && pnpm test:interop && cargo test -p sol-ledger-schema-generator && node --test scripts/audit-secrets.test.mjs scripts/fixtures.test.mjs scripts/generated-types.test.mjs",
     "test:interop": "node -e \"require('node:fs').rmSync('.tmp/interop',{recursive:true,force:true})\" && tsc --noEmit false --outDir .tmp/interop && node --test scripts/interop.test.mjs",
     "typecheck": "tsc --noEmit",
     "validate:fixtures": "node scripts/validate-fixtures.mjs"

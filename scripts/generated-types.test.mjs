@@ -1,10 +1,11 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { spawnSync } from "node:child_process";
-import { readFile, readdir, unlink, writeFile } from "node:fs/promises";
+import { readFile, readdir, rename, rm, unlink, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
 
 const generatedDir = resolve("packages/typescript/src/generated");
+const rustGenerated = resolve("crates/sol-ledger-schema/src/generated.rs");
 
 test("generated TypeScript never widens schema objects to explicit any", async () => {
   const files = (await readdir(generatedDir)).filter((file) => file.endsWith(".ts"));
@@ -27,5 +28,32 @@ test("generated type check rejects stale extra files without deleting them", asy
     assert.equal(await readFile(staleFile, "utf8"), "// stale generated output\n");
   } finally {
     await unlink(staleFile).catch(() => {});
+  }
+});
+
+test("generation recreates a missing TypeScript output directory", async () => {
+  const backup = `${generatedDir}.test-backup`;
+  await rename(generatedDir, backup);
+  try {
+    const result = spawnSync(process.execPath, ["scripts/generate-types.mjs"], { encoding: "utf8" });
+    assert.equal(result.status, 0, result.stderr);
+    assert.ok((await readdir(generatedDir)).includes("index.ts"));
+  } finally {
+    await rm(generatedDir, { recursive: true, force: true });
+    await rename(backup, generatedDir);
+  }
+});
+
+test("generation recovers from an uncompilable Rust output", async () => {
+  const backup = `${rustGenerated}.test-backup`;
+  await rename(rustGenerated, backup);
+  await writeFile(rustGenerated, "this is not valid Rust\n");
+  try {
+    const result = spawnSync(process.execPath, ["scripts/generate-types.mjs"], { encoding: "utf8" });
+    assert.equal(result.status, 0, result.stderr);
+    assert.match(await readFile(rustGenerated, "utf8"), /pub struct EventEnvelope/u);
+  } finally {
+    await rm(rustGenerated, { force: true });
+    await rename(backup, rustGenerated);
   }
 });

@@ -5,9 +5,13 @@ use serde_json::{Map, Number, Value};
 use sha2::{Digest, Sha256};
 use std::{
     fs::File,
-    io::{BufRead, BufReader},
+    io::{BufRead, BufReader, Read},
     path::PathBuf,
 };
+
+const MAX_LEDGER_BYTES: usize = 16 * 1024 * 1024;
+const MAX_LINE_BYTES: usize = 1024 * 1024;
+const MAX_EVENTS: usize = 100_000;
 
 #[derive(Parser)]
 struct Cli {
@@ -41,8 +45,11 @@ fn canonical_hash(value: &Value) -> Result<String> {
 }
 
 fn verify_chain(path: PathBuf, expected_head_sha256: &str) -> Result<()> {
-    let reader =
-        BufReader::new(File::open(&path).with_context(|| format!("open {}", path.display()))?);
+    let file = File::open(&path).with_context(|| format!("open {}", path.display()))?;
+    if file.metadata().context("inspect ledger")?.len() > MAX_LEDGER_BYTES as u64 {
+        bail!("ledger exceeds {MAX_LEDGER_BYTES} byte limit");
+    }
+    let reader = BufReader::new(file);
     let (count, actual_head) = verify_reader(reader)?;
     if actual_head.as_deref() != Some(expected_head_sha256) {
         bail!(
@@ -54,28 +61,52 @@ fn verify_chain(path: PathBuf, expected_head_sha256: &str) -> Result<()> {
     Ok(())
 }
 
-fn verify_reader(reader: impl BufRead) -> Result<(usize, Option<String>)> {
+fn verify_reader(mut reader: impl BufRead) -> Result<(usize, Option<String>)> {
     let mut previous: Option<String> = None;
     let mut count = 0;
-    for (index, line) in reader.lines().enumerate() {
-        let value = parse_json_without_duplicates(&line.context("read JSONL")?)
-            .with_context(|| format!("parse line {}", index + 1))?;
+    let mut total_bytes = 0usize;
+    loop {
+        let mut line = String::new();
+        let bytes = reader
+            .by_ref()
+            .take((MAX_LINE_BYTES + 1) as u64)
+            .read_line(&mut line)
+            .context("read JSONL")?;
+        if bytes == 0 {
+            break;
+        }
+        if bytes > MAX_LINE_BYTES {
+            bail!("line {} exceeds {MAX_LINE_BYTES} byte limit", count + 1);
+        }
+        total_bytes = total_bytes
+            .checked_add(bytes)
+            .context("ledger byte count overflow")?;
+        if total_bytes > MAX_LEDGER_BYTES {
+            bail!("ledger exceeds {MAX_LEDGER_BYTES} byte limit");
+        }
+        if count >= MAX_EVENTS {
+            bail!("ledger exceeds {MAX_EVENTS} event limit");
+        }
+        let line = line.strip_suffix('\n').unwrap_or(&line);
+        let line = line.strip_suffix('\r').unwrap_or(line);
+        let value = parse_json_without_duplicates(line)
+            .with_context(|| format!("parse line {}", count + 1))?;
         sol_ledger_schema::validate("event-envelope", &value)
-            .with_context(|| format!("validate line {}", index + 1))?;
+            .with_context(|| format!("validate line {}", count + 1))?;
         let expected_payload_hash = value
             .pointer("/integrity/payloadSha256")
             .and_then(Value::as_str)
             .context("missing payload hash")?;
         let actual_payload_hash = canonical_hash(value.get("payload").context("missing payload")?)?;
         if expected_payload_hash != actual_payload_hash {
-            bail!("payload hash mismatch at line {}", index + 1);
+            bail!("payload hash mismatch at line {}", count + 1);
         }
         let linked = value
             .pointer("/integrity/previousEventSha256")
             .and_then(Value::as_str)
             .map(str::to_owned);
         if linked != previous {
-            bail!("chain mismatch at line {}", index + 1);
+            bail!("chain mismatch at line {}", count + 1);
         }
         previous = Some(canonical_hash(&value)?);
         count += 1;
@@ -258,5 +289,12 @@ mod tests {
             parse_json_without_duplicates(r#"{"payload":{},"payload":{"forged":true}}"#).is_err()
         );
         assert!(parse_json_without_duplicates(r#"{"payload":{"x":1,"x":2}}"#).is_err());
+    }
+
+    #[test]
+    fn rejects_a_line_before_allocating_beyond_the_limit() {
+        let input = format!("{}\n", " ".repeat(MAX_LINE_BYTES + 1));
+        let error = verify_reader(Cursor::new(input)).unwrap_err();
+        assert!(error.to_string().contains("line 1 exceeds"));
     }
 }
