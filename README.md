@@ -9,9 +9,9 @@ The protocol deliberately separates an observed execution from verified
 evidence. An observation may become an evidence candidate, but only a
 product-specific promotion gate can turn it into verified evidence.
 
-> **Installation status:** this repository is currently private and its Node
-> package has `private: true`; it is not published to npm. Clone it from an
-> account with access. pnpm is the supported JavaScript package manager.
+> **Distribution status:** install from this source repository with pnpm and
+> Cargo. The Node package remains `private: true`, and no npm package or Rust
+> crate is currently published, preventing accidental registry releases.
 
 ## Shortest path
 
