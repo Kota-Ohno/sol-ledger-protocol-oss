@@ -248,7 +248,6 @@ impl From<generated::SecurityPolicy> for SecurityPolicy {
         }
     }
 }
-
 static VALIDATORS: LazyLock<HashMap<&'static str, jsonschema::Validator>> = LazyLock::new(|| {
     [
         (

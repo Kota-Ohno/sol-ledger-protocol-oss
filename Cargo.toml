@@ -1,5 +1,5 @@
 [workspace]
-members = ["crates/sol-ledger-schema", "crates/sol-ledger-cli"]
+members = ["crates/sol-ledger-schema", "crates/sol-ledger-cli", "tools/sol-ledger-schema-generator"]
 resolver = "2"
 
 [workspace.package]

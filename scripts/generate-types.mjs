@@ -40,7 +40,12 @@ const securitySchema = JSON.parse(
   await readFile(resolve(schemaDir, "security-policy.schema.json"), "utf8"),
 );
 
-const unexpectedOutputs = (await readdir(outputDir)).filter(
+if (!checkMode) await mkdir(outputDir, { recursive: true });
+const existingOutputs = await readdir(outputDir).catch((error) => {
+  if (error.code === "ENOENT") return [];
+  throw error;
+});
+const unexpectedOutputs = existingOutputs.filter(
   (file) => file.endsWith(".ts") && !expectedOutputs.has(file),
 );
 if (checkMode && unexpectedOutputs.length > 0) {
@@ -92,7 +97,7 @@ export type { SecurityPolicy } from "./security-policy.js";
 
   execFileSync(
     "cargo",
-    ["run", "--quiet", "-p", "sol-ledger-schema", "--example", "generate-types"],
+    ["run", "--quiet", "-p", "sol-ledger-schema-generator"],
     { cwd: root, stdio: "inherit", env: { ...process.env, SOL_LEDGER_GENERATED_RS_OUT: temporaryRust } },
   );
 
