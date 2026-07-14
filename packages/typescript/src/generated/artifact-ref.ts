@@ -1,4 +1,4 @@
-/* Generated from schemas/*.schema.json by npm run generate. Do not edit. */
+/* Generated from schemas/*.schema.json by pnpm generate. Do not edit. */
 
 export interface ArtifactRef {
   artifactId: string;
