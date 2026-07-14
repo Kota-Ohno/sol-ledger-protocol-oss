@@ -7,6 +7,7 @@ readme.workspace = true
 repository.workspace = true
 homepage.workspace = true
 description = "Schema validation and generated Rust types for Sol Ledger protocol records"
+publish = false
 
 [dependencies]
 anyhow.workspace = true
