@@ -15,6 +15,9 @@
 - [x] M10 — Resolve personal-email history through a reviewed fresh snapshot
   with a GitHub noreply author while retaining the private development history
   in its original repository.
-- [ ] M11 — Rerun ecosystem acceptance against the clean-history repositories
-  and obtain explicit approval before any visibility or package publication
-  change.
+- [x] M11a — Rerun ecosystem acceptance against the clean-history repositories.
+  Ecosystem Acceptance Kit index sequence 10 records receipt
+  `c8235f5102bb39c6fc4964ea3a0622cbcf61eb7d2785ac4c51536bb1968a721c`
+  for this repository revision.
+- [ ] M11b — Obtain explicit approval before any visibility or package
+  publication change.
