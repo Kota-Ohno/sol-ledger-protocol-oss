@@ -47,12 +47,23 @@ fn main() -> Result<()> {
             value["properties"]["security"] = security;
         }
         project_for_types(&mut value);
+        if file == "event-envelope.schema.json" {
+            // Keep the already-public generated field source-compatible. The
+            // schema validator still enforces the string constant at runtime.
+            value["properties"]["schemaVersion"]
+                .as_object_mut()
+                .context("event schemaVersion must be an object")?
+                .remove("type");
+        }
         let schema: Schema = serde_json::from_value(value)
             .with_context(|| format!("project schema {file} for Rust types"))?;
         schemas.insert(name.to_owned(), schema);
     }
 
-    let mut type_space = TypeSpace::new(&TypeSpaceSettings::default());
+    let mut settings = TypeSpaceSettings::default();
+    settings.with_derive("Eq".to_owned());
+    settings.with_derive("PartialEq".to_owned());
+    let mut type_space = TypeSpace::new(&settings);
     type_space.add_ref_types(schemas)?;
     let generated = type_space.to_stream();
     let output = quote! {
@@ -81,6 +92,27 @@ fn main() -> Result<()> {
 fn project_for_types(value: &mut Value) {
     match value {
         Value::Object(object) => {
+            if !object.contains_key("type")
+                && let Some(constant) = object.get("const")
+            {
+                let inferred_type = match constant {
+                    Value::Null => Some("null"),
+                    Value::Bool(_) => Some("boolean"),
+                    Value::Number(number) if number.is_i64() || number.is_u64() => Some("integer"),
+                    Value::Number(_) => Some("number"),
+                    Value::String(_) => Some("string"),
+                    Value::Array(_) => Some("array"),
+                    Value::Object(_) => Some("object"),
+                };
+                object.insert(
+                    "type".to_owned(),
+                    Value::String(
+                        inferred_type
+                            .expect("all JSON values have a type")
+                            .to_owned(),
+                    ),
+                );
+            }
             if let Some(Value::Array(branches)) = object.get_mut("allOf") {
                 branches.retain(|branch| branch.get("if").is_none());
                 if branches.is_empty() {
@@ -127,5 +159,14 @@ mod tests {
 
         assert_eq!(schema["allOf"].as_array().unwrap().len(), 1);
         assert_eq!(schema["allOf"][0]["properties"]["kept"]["type"], "string");
+    }
+
+    #[test]
+    fn projection_infers_the_type_of_constants() {
+        let mut schema = serde_json::json!({"const": "0.1.0"});
+
+        project_for_types(&mut schema);
+
+        assert_eq!(schema["type"], "string");
     }
 }

@@ -76,7 +76,7 @@ pub mod error {
 #[doc = "}"]
 #[doc = r" ```"]
 #[doc = r" </details>"]
-#[derive(:: serde :: Deserialize, :: serde :: Serialize, Clone, Debug)]
+#[derive(:: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, Eq, PartialEq)]
 #[serde(deny_unknown_fields)]
 pub struct ArtifactRef {
     #[serde(rename = "artifactId")]
@@ -394,7 +394,7 @@ impl ::std::convert::TryFrom<::std::string::String> for ArtifactRefStorage {
 #[doc = "}"]
 #[doc = r" ```"]
 #[doc = r" </details>"]
-#[derive(:: serde :: Deserialize, :: serde :: Serialize, Clone, Debug)]
+#[derive(:: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, Eq, PartialEq)]
 #[serde(deny_unknown_fields)]
 pub struct EventEnvelope {
     pub actor: EventEnvelopeActor,
@@ -467,7 +467,7 @@ pub struct EventEnvelope {
 #[doc = "}"]
 #[doc = r" ```"]
 #[doc = r" </details>"]
-#[derive(:: serde :: Deserialize, :: serde :: Serialize, Clone, Debug)]
+#[derive(:: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, Eq, PartialEq)]
 #[serde(deny_unknown_fields)]
 pub struct EventEnvelopeActor {
     pub id: ::std::string::String,
@@ -581,7 +581,7 @@ impl ::std::convert::TryFrom<::std::string::String> for EventEnvelopeActorKind {
 #[doc = "}"]
 #[doc = r" ```"]
 #[doc = r" </details>"]
-#[derive(:: serde :: Deserialize, :: serde :: Serialize, Clone, Debug)]
+#[derive(:: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, Eq, PartialEq)]
 #[serde(deny_unknown_fields)]
 pub struct EventEnvelopeIntegrity {
     #[serde(rename = "payloadSha256")]
@@ -641,7 +641,7 @@ pub struct EventEnvelopeIntegrity {
 #[doc = "}"]
 #[doc = r" ```"]
 #[doc = r" </details>"]
-#[derive(:: serde :: Deserialize, :: serde :: Serialize, Clone, Debug)]
+#[derive(:: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, Eq, PartialEq)]
 #[serde(deny_unknown_fields)]
 pub struct ProvenanceEdge {
     #[serde(default, skip_serializing_if = "::serde_json::Map::is_empty")]
@@ -798,7 +798,7 @@ impl ::std::convert::TryFrom<::std::string::String> for ProvenanceEdgeRelationsh
 #[doc = "}"]
 #[doc = r" ```"]
 #[doc = r" </details>"]
-#[derive(:: serde :: Deserialize, :: serde :: Serialize, Clone, Debug)]
+#[derive(:: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, Eq, PartialEq)]
 #[serde(deny_unknown_fields)]
 pub struct SecurityPolicy {
     #[serde(rename = "contentMode")]
