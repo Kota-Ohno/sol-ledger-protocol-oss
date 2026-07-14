@@ -10,8 +10,10 @@ evidence. An observation may become an evidence candidate, but only a
 product-specific promotion gate can turn it into verified evidence.
 
 > **Distribution status:** install from this source repository with pnpm and
-> Cargo. The Node package remains `private: true`, and no npm package or Rust
-> crate is currently published, preventing accidental registry releases.
+> Cargo. The Node package remains `private: true`, both Rust crates set
+> `publish = false`, and no registry artifact is currently published.
+> Before repository visibility is public, cloning requires authorized GitHub
+> access; after visibility changes, the same source-install steps work anonymously.
 
 ## Shortest path
 
@@ -52,7 +54,7 @@ privacy-bounded observations, while
 [Evidence Forge](https://github.com/Kota-Ohno/evidence-forge-oss) owns the
 source-backed promotion decision. The
 [Ecosystem Acceptance Kit](https://github.com/Kota-Ohno/ecosystem-acceptance-kit-oss)
-verifies pinned revisions together. Tested private consumers are listed in
+verifies pinned revisions together. Tested consumers are listed in
 [consumer compatibility](docs/consumer-compatibility.md).
 
 ## Safety limits
