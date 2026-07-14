@@ -2,7 +2,7 @@ use anyhow::{Context, Result};
 use quote::quote;
 use schemars::schema::Schema;
 use serde_json::Value;
-use std::{collections::BTreeMap, fs, path::PathBuf, process::Command};
+use std::{collections::BTreeMap, env, fs, path::PathBuf, process::Command};
 use typify::{TypeSpace, TypeSpaceSettings};
 
 fn main() -> Result<()> {
@@ -60,7 +60,9 @@ fn main() -> Result<()> {
         #generated
     }
     .to_string();
-    let output_path = root.join("crates/sol-ledger-schema/src/generated.rs");
+    let output_path = env::var_os("SOL_LEDGER_GENERATED_RS_OUT")
+        .map(PathBuf::from)
+        .unwrap_or_else(|| root.join("crates/sol-ledger-schema/src/generated.rs"));
     fs::write(&output_path, output).context("write generated Rust types")?;
     let status = Command::new("rustfmt")
         .arg("--edition")

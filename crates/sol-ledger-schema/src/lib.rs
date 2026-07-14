@@ -2,6 +2,7 @@ use anyhow::{Context, Result, bail};
 use jsonschema::Resource;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
+use std::{collections::HashMap, sync::LazyLock};
 
 /// Schema-derived types. The existing root-level API remains available for
 /// compatibility while consumers migrate to these generated definitions.
@@ -94,27 +95,51 @@ pub struct EventEnvelope {
     pub integrity: EventIntegrity,
 }
 
+static VALIDATORS: LazyLock<HashMap<&'static str, jsonschema::Validator>> = LazyLock::new(|| {
+    [
+        (
+            "event-envelope",
+            include_str!("../../../schemas/event-envelope.schema.json"),
+        ),
+        (
+            "security-policy",
+            include_str!("../../../schemas/security-policy.schema.json"),
+        ),
+        (
+            "artifact-ref",
+            include_str!("../../../schemas/artifact-ref.schema.json"),
+        ),
+        (
+            "provenance-edge",
+            include_str!("../../../schemas/provenance-edge.schema.json"),
+        ),
+    ]
+    .into_iter()
+    .map(|(name, source)| {
+        let schema: Value =
+            serde_json::from_str(source).expect("embedded schema must be valid JSON");
+        let security_schema: Value =
+            serde_json::from_str(include_str!("../../../schemas/security-policy.schema.json"))
+                .expect("embedded security schema must be valid JSON");
+        let validator = jsonschema::options()
+            .with_draft(jsonschema::Draft::Draft202012)
+            .should_validate_formats(true)
+            .with_resource(
+                "https://sol-ledger.dev/schema/security-policy/0.1.0",
+                Resource::from_contents(security_schema)
+                    .expect("embedded security schema must register"),
+            )
+            .build(&schema)
+            .expect("embedded schema must compile");
+        (name, validator)
+    })
+    .collect()
+});
+
 pub fn validate(schema_name: &str, instance: &Value) -> Result<()> {
-    let source = match schema_name {
-        "event-envelope" => include_str!("../../../schemas/event-envelope.schema.json"),
-        "security-policy" => include_str!("../../../schemas/security-policy.schema.json"),
-        "artifact-ref" => include_str!("../../../schemas/artifact-ref.schema.json"),
-        "provenance-edge" => include_str!("../../../schemas/provenance-edge.schema.json"),
-        _ => bail!("unknown schema: {schema_name}"),
-    };
-    let schema: Value = serde_json::from_str(source).context("parse embedded schema")?;
-    let security_schema: Value =
-        serde_json::from_str(include_str!("../../../schemas/security-policy.schema.json"))
-            .context("parse security schema")?;
-    let validator = jsonschema::options()
-        .with_draft(jsonschema::Draft::Draft202012)
-        .should_validate_formats(true)
-        .with_resource(
-            "https://sol-ledger.dev/schema/security-policy/0.1.0",
-            Resource::from_contents(security_schema).context("register security schema")?,
-        )
-        .build(&schema)
-        .context("compile schema")?;
+    let validator = VALIDATORS
+        .get(schema_name)
+        .with_context(|| format!("unknown schema: {schema_name}"))?;
     let errors: Vec<String> = validator
         .iter_errors(instance)
         .map(|error| error.to_string())
