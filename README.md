@@ -1,36 +1,73 @@
 # Sol Ledger Protocol
 
-Portable contracts for tamper-evident AI execution traces and evidence provenance.
+Sol Ledger Protocol gives tool builders one product-neutral contract for
+tamper-evident AI execution traces and evidence provenance, with generated
+TypeScript and Rust types. Use it when multiple tools need to exchange records
+without sharing a hosted service or inventing incompatible event formats.
 
-The protocol deliberately separates an observed execution from verified evidence.
-Observations may become evidence candidates, but only a product-specific promotion
-gate can turn them into verified evidence.
+The protocol deliberately separates an observed execution from verified
+evidence. An observation may become an evidence candidate, but only a
+product-specific promotion gate can turn it into verified evidence.
 
-## Quick verification
+> **Installation status:** this repository is currently private and its Node
+> package has `private: true`; it is not published to npm. Clone it from an
+> account with access. pnpm is the supported JavaScript package manager.
 
-The protocol has no hosted service or paid runtime dependency. Verify both
-language implementations locally:
+## Shortest path
+
+The protocol has no hosted service or paid runtime dependency. Repository
+verification requires Node.js 22.13 or newer, pnpm 11.0.8, Rust, and Cargo;
+the generated/runtime Node package itself retains its Node.js 20 floor. If
+`corepack` is unavailable but the pinned pnpm version is already installed,
+skip the `corepack enable` line.
 
 ```bash
+git clone https://github.com/Kota-Ohno/sol-ledger-protocol-oss.git
+cd sol-ledger-protocol-oss
 corepack enable
 pnpm install --frozen-lockfile --ignore-scripts
 pnpm test
 cargo test --workspace
 ```
 
-## Development
+## Everyday workflows
 
 ```bash
-pnpm install
-pnpm test
-cargo test --workspace
+# Validate the shipped fixtures.
+pnpm validate:fixtures
+
+# Regenerate schema-derived types and prove the checkout is current.
+pnpm generate
+pnpm check:generated
+
+# Verify a JSONL chain against a head retained through another channel.
 cargo run -p sol-ledger-cli -- verify-chain trace.jsonl --expected-head-sha256 <trusted-sha256>
 ```
 
+## Role in the ecosystem
+
+Sol Ledger is the shared wire contract and verification layer.
+[Agent Black Box](https://github.com/Kota-Ohno/agent-black-box-oss) emits
+privacy-bounded observations, while
+[Evidence Forge](https://github.com/Kota-Ohno/evidence-forge-oss) owns the
+source-backed promotion decision. The
+[Ecosystem Acceptance Kit](https://github.com/Kota-Ohno/ecosystem-acceptance-kit-oss)
+verifies pinned revisions together. Tested private consumers are listed in
+[consumer compatibility](docs/consumer-compatibility.md).
+
+## Safety limits
+
+- Hash-chain validation detects inconsistency relative to a trusted head; it
+  does not prove authorship, truthfulness, or trusted time.
+- Generated language types cannot encode every JSON Schema constraint. Runtime
+  validators remain authoritative for formats, bounds, and conditional rules.
+- Raw prompts, model responses, tool arguments, and tool results are not a
+  default requirement of the protocol; products must make any retention explicit.
+- Read the [threat model](docs/threat-model.md) before treating a valid record as
+  a security or evidence claim.
+
 See [the protocol](docs/protocol.md), [threat model](docs/threat-model.md), and
-[roadmap](docs/ROADMAP.md). Tested private consumers are listed in
-[consumer compatibility](docs/consumer-compatibility.md), including the reusable
-three-product operator acceptance entry point.
+[roadmap](docs/ROADMAP.md).
 
 Interop profiles are documented for [OpenTelemetry](docs/open-telemetry-mapping.md)
 and [W3C PROV](docs/w3c-prov-mapping.md). Their pure TypeScript adapters create
