@@ -252,19 +252,19 @@ static VALIDATORS: LazyLock<HashMap<&'static str, jsonschema::Validator>> = Lazy
     [
         (
             "event-envelope",
-            include_str!("../../../schemas/event-envelope.schema.json"),
+            include_str!("../schemas/event-envelope.schema.json"),
         ),
         (
             "security-policy",
-            include_str!("../../../schemas/security-policy.schema.json"),
+            include_str!("../schemas/security-policy.schema.json"),
         ),
         (
             "artifact-ref",
-            include_str!("../../../schemas/artifact-ref.schema.json"),
+            include_str!("../schemas/artifact-ref.schema.json"),
         ),
         (
             "provenance-edge",
-            include_str!("../../../schemas/provenance-edge.schema.json"),
+            include_str!("../schemas/provenance-edge.schema.json"),
         ),
     ]
     .into_iter()
@@ -272,7 +272,7 @@ static VALIDATORS: LazyLock<HashMap<&'static str, jsonschema::Validator>> = Lazy
         let schema: Value =
             serde_json::from_str(source).expect("embedded schema must be valid JSON");
         let security_schema: Value =
-            serde_json::from_str(include_str!("../../../schemas/security-policy.schema.json"))
+            serde_json::from_str(include_str!("../schemas/security-policy.schema.json"))
                 .expect("embedded security schema must be valid JSON");
         let validator = jsonschema::options()
             .with_draft(jsonschema::Draft::Draft202012)

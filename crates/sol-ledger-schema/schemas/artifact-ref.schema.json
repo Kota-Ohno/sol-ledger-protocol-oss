@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://sol-ledger.dev/schema/artifact-ref/0.1.0",
+  "title": "Sol Ledger artifact reference",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["artifactId", "mediaType", "byteLength", "storage", "redaction"],
+  "properties": {
+    "artifactId": { "type": "string", "pattern": "^artifact:sha256:[0-9a-f]{64}$" },
+    "mediaType": { "type": "string", "pattern": "^[^/\\s]+/[^/\\s]+$" },
+    "byteLength": { "type": "integer", "minimum": 0 },
+    "storage": { "enum": ["none", "local_blob", "external"] },
+    "locator": { "type": "string", "minLength": 1 },
+    "redaction": { "enum": ["none", "partial", "full"] },
+    "originalName": { "type": "string", "maxLength": 255 }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "storage": { "const": "none" } }, "required": ["storage"] },
+      "then": { "not": { "required": ["locator"] } }
+    },
+    {
+      "if": { "properties": { "storage": { "enum": ["local_blob", "external"] } }, "required": ["storage"] },
+      "then": { "required": ["locator"] }
+    }
+  ]
+}

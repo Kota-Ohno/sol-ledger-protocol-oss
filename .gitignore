@@ -1,6 +1,7 @@
 node_modules/
 target/
 .tmp/
+packages/typescript/dist/
 .env
 .env.*
 !.env.example

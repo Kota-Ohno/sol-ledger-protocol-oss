@@ -9,13 +9,37 @@ The protocol deliberately separates an observed execution from verified
 evidence. An observation may become an evidence candidate, but only a
 product-specific promotion gate can turn it into verified evidence.
 
-> **Distribution status:** install from this source repository with pnpm and
-> Cargo. The Node package remains `private: true`, both Rust crates set
-> `publish = false`, and no registry artifact is currently published.
-> Before repository visibility is public, cloning requires authorized GitHub
-> access; after visibility changes, the same source-install steps work anonymously.
+> **Distribution:** install the TypeScript contract from npm, the Rust schema
+> library or verifier CLI from crates.io, or clone the public source repository
+> for protocol development. No hosted service or account is required at runtime.
 
 ## Shortest path
+
+For TypeScript consumers:
+
+```bash
+pnpm add sol-ledger-protocol
+```
+
+For Rust library consumers, from an existing Cargo project:
+
+```bash
+cargo add sol-ledger-schema
+```
+
+For CLI users:
+
+```bash
+cargo install sol-ledger-cli
+sol-ledger verify-chain trace.jsonl --expected-head-sha256 <trusted-sha256>
+```
+
+The trusted head must be a separately retained 64-character lowercase SHA-256;
+do not recreate it from a trace already under investigation. Agent Black Box
+stores its current head in the adjacent `.head.json` receipt described in its
+[README](https://github.com/Kota-Ohno/agent-black-box-oss#everyday-workflows).
+
+For protocol contributors:
 
 The protocol has no hosted service or paid runtime dependency. Repository
 verification requires Node.js 22.13 or newer, pnpm 11.0.8, Rust, and Cargo;

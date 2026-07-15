@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://sol-ledger.dev/schema/security-policy/0.1.0",
+  "title": "Sol Ledger security policy",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["sensitivity", "contentMode", "retentionClass"],
+  "properties": {
+    "sensitivity": { "enum": ["public", "internal", "private", "secret_never_export"] },
+    "contentMode": { "enum": ["metadata_only", "hash_only", "redacted", "full_opt_in"] },
+    "retentionClass": { "enum": ["ephemeral", "user_managed", "audit", "legal_hold"] },
+    "expiresAt": { "type": "string", "format": "date-time" },
+    "redactionProfile": { "type": "string", "maxLength": 128 }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "sensitivity": { "const": "secret_never_export" } }, "required": ["sensitivity"] },
+      "then": { "properties": { "contentMode": { "enum": ["metadata_only", "hash_only"] } } }
+    }
+  ]
+}

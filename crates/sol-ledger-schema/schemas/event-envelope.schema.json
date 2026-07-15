@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://sol-ledger.dev/schema/event-envelope/0.1.0",
+  "title": "Sol Ledger event envelope",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "eventId", "eventType", "occurredAt", "recordedAt", "actor", "payload", "security", "integrity"],
+  "properties": {
+    "schemaVersion": { "const": "0.1.0" },
+    "eventId": { "type": "string", "pattern": "^evt_[A-Za-z0-9_-]{8,}$" },
+    "eventType": { "type": "string", "pattern": "^[a-z][a-z0-9_]*(\\.[a-z][a-z0-9_]*)+$" },
+    "occurredAt": { "type": "string", "format": "date-time" },
+    "recordedAt": { "type": "string", "format": "date-time" },
+    "runId": { "type": "string", "pattern": "^run_[A-Za-z0-9_-]{8,}$" },
+    "traceId": { "type": "string", "pattern": "^[0-9a-f]{32}$" },
+    "spanId": { "type": "string", "pattern": "^[0-9a-f]{16}$" },
+    "actor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "id"],
+      "properties": {
+        "kind": { "enum": ["human", "agent", "service", "system"] },
+        "id": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "software": { "type": "string", "maxLength": 128 }
+      }
+    },
+    "subjectRefs": { "type": "array", "items": { "type": "string", "minLength": 1 }, "uniqueItems": true },
+    "payload": { "type": "object" },
+    "security": { "$ref": "https://sol-ledger.dev/schema/security-policy/0.1.0" },
+    "integrity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["payloadSha256"],
+      "properties": {
+        "payloadSha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+        "previousEventSha256": { "type": ["string", "null"], "pattern": "^[0-9a-f]{64}$" }
+      }
+    }
+  }
+}

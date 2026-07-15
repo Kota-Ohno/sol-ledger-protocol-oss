@@ -1,11 +1,42 @@
 {
-  "name": "@sol-ledger/protocol",
-  "version": "0.1.0",
-  "private": true,
+  "name": "sol-ledger-protocol",
+  "version": "0.1.1",
+  "description": "Product-neutral TypeScript contracts and interop adapters for tamper-evident AI execution traces",
   "license": "MIT",
   "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "exports": {
-    ".": "./src/index.ts"
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
   },
-  "types": "./src/index.ts"
+  "files": [
+    "dist",
+    "LICENSE",
+    "README.md"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Kota-Ohno/sol-ledger-protocol-oss.git",
+    "directory": "packages/typescript"
+  },
+  "homepage": "https://github.com/Kota-Ohno/sol-ledger-protocol-oss#readme",
+  "bugs": {
+    "url": "https://github.com/Kota-Ohno/sol-ledger-protocol-oss/issues"
+  },
+  "keywords": [
+    "ai-agents",
+    "audit-log",
+    "provenance",
+    "opentelemetry",
+    "w3c-prov"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
 }

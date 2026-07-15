@@ -2,12 +2,14 @@
 name = "sol-ledger-schema"
 version.workspace = true
 edition.workspace = true
+rust-version.workspace = true
 license-file.workspace = true
 readme.workspace = true
 repository.workspace = true
 homepage.workspace = true
 description = "Schema validation and generated Rust types for Sol Ledger protocol records"
-publish = false
+keywords = ["ai", "audit", "provenance", "schema"]
+categories = ["data-structures", "development-tools"]
 
 [dependencies]
 anyhow.workspace = true

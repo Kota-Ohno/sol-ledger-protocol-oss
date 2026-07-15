@@ -6,6 +6,19 @@ import { resolve } from "node:path";
 
 const generatedDir = resolve("packages/typescript/src/generated");
 const rustGenerated = resolve("crates/sol-ledger-schema/src/generated.rs");
+const embeddedSchemaDir = resolve("crates/sol-ledger-schema/schemas");
+
+test("published Rust crate embeds the canonical schemas byte for byte", async () => {
+  const files = (await readdir(resolve("schemas"))).filter((file) => file.endsWith(".json"));
+  assert.ok(files.length > 0, "expected canonical schemas");
+  for (const file of files) {
+    assert.equal(
+      await readFile(resolve(embeddedSchemaDir, file), "utf8"),
+      await readFile(resolve("schemas", file), "utf8"),
+      `${file} drifted from the canonical schema`,
+    );
+  }
+});
 
 test("generated TypeScript never widens schema objects to explicit any", async () => {
   const files = (await readdir(generatedDir)).filter((file) => file.endsWith(".ts"));

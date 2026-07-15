@@ -1,0 +1,14 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "declaration": true,
+    "noEmit": false,
+    "outDir": "./packages/typescript/dist",
+    "rootDir": "./packages/typescript/src"
+  },
+  "include": [
+    "packages/typescript/src/index.ts",
+    "packages/typescript/src/generated/**/*.ts",
+    "packages/typescript/src/interop/**/*.ts"
+  ]
+}

@@ -2,12 +2,18 @@
 name = "sol-ledger-cli"
 version.workspace = true
 edition.workspace = true
+rust-version.workspace = true
 license-file.workspace = true
 readme.workspace = true
 repository.workspace = true
 homepage.workspace = true
 description = "Local tamper-evident chain verifier for Sol Ledger protocol records"
-publish = false
+keywords = ["ai", "audit", "provenance", "cli"]
+categories = ["command-line-utilities", "development-tools"]
+
+[[bin]]
+name = "sol-ledger"
+path = "src/main.rs"
 
 [dependencies]
 anyhow.workspace = true
@@ -17,4 +23,4 @@ serde_json.workspace = true
 serde.workspace = true
 serde_jcs.workspace = true
 sha2.workspace = true
-sol-ledger-schema = { path = "../sol-ledger-schema" }
+sol-ledger-schema = { path = "../sol-ledger-schema", version = "0.1.1" }

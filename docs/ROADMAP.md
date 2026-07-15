@@ -19,5 +19,5 @@
   Ecosystem Acceptance Kit index sequence 10 records receipt
   `c8235f5102bb39c6fc4964ea3a0622cbcf61eb7d2785ac4c51536bb1968a721c`
   for this repository revision.
-- [ ] M11b — Obtain explicit approval before any visibility or package
-  publication change.
+- [x] M11b — Publish the approved repositories and prepare installable npm and
+  crates.io packages with registry-safe metadata and local package smoke tests.
